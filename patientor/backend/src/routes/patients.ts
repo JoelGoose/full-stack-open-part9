@@ -1,11 +1,11 @@
 import express, { type Response } from 'express';
 import patientService from '../services/PatientService.ts';
-import { NewPatientSchema, type NonSsnPatient } from '../types.ts';
+import { NewPatientSchema, type NonSensitivePatient, type Patient } from '../types.ts';
 import { z } from 'zod';
 
 const router = express.Router();
 
-router.get('/', (_req, res: Response<NonSsnPatient[]>) => {
+router.get('/', (_req, res: Response<NonSensitivePatient[]>) => {
   const data = patientService.getNonSsnPatients();
   res.send(data);
 });
@@ -22,6 +22,14 @@ router.post('/', (req, res) => {
       res.status(400).send({ error: 'unknown error' });
     }
   }
+});
+
+router.get('/:id', (req, res: Response<Patient | { error: string }>) => {
+  const patient = patientService.getPatientById(req.params.id);
+  if (patient === undefined) {
+    return res.status(404).json({ error: 'patient not found' });
+  }
+  return res.json(patient);
 });
 
 export default router;
