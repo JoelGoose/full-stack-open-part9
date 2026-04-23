@@ -13,7 +13,7 @@ interface Props {
 type EntryType = "Hospital" | "OccupationalHealthcare" | "HealthCheck" 
 
 const AddEntryForm = ({ onCancel, onSubmit, diagnoses }: Props) => {
-  const [selectedType, setSelectedType] = useState<EntryType>("Hospital");  
+  const [selectedType, setSelectedType] = useState<EntryType>("HealthCheck");  
   
   const [description, setDescription] = useState('');
   const [date, setDate] = useState('');
