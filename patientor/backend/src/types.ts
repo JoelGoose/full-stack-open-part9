@@ -13,13 +13,12 @@ export const Gender = {
 } as const;
 export type Gender = typeof Gender[keyof typeof Gender];
 
-interface BaseEntry {
-  id: string;
-  description: string;
-  date: string;
-  specialist: string;
-  diagnosisCodes?: Diagnosis['code'][];
-}
+export const BaseNewEntrySchema = z.object({
+  description: z.string(),
+  date: z.iso.date(),
+  specialist: z.string(),
+  diagnosisCodes: z.array(z.string()).optional()
+});
 
 const HealthCheckRating = {
   Healthy: 0,
@@ -30,36 +29,66 @@ const HealthCheckRating = {
 
 type HealthCheckRating = typeof HealthCheckRating[keyof typeof HealthCheckRating];
 
-interface HealthCheckEntry extends BaseEntry {
-  type: "HealthCheck";
-  healthCheckRating: HealthCheckRating;
-}
+export const NewHealthCheckEntrySchema = BaseNewEntrySchema.extend({
+  type: z.literal('HealthCheck'),
+  healthCheckRating: z.union([
+    z.literal(HealthCheckRating.Healthy),
+    z.literal(HealthCheckRating.LowRisk),
+    z.literal(HealthCheckRating.HighRisk),
+    z.literal(HealthCheckRating.CriticalRisk),
+  ])
+});
 
-interface Discharge {
-  date: string,
-  criteria: string
-}
+export const DischargeSchema = z.object({
+  date: z.iso.date(),
+  criteria: z.string()
+});
 
-interface SickLeave {
-  startDate: string,
-  endDate: string
-}
+export const NewHospitalEntrySchema = BaseNewEntrySchema.extend({
+  type: z.literal('Hospital'),
+  discharge: DischargeSchema
+});
 
-interface HospitalEntry extends BaseEntry {
-  type: "Hospital";
-  discharge: Discharge 
-}
+export const SickLeaveSchema = z.object({
+  startDate: z.iso.date(),
+  endDate: z.iso.date()
+});
 
-interface OccupationalHealthcareEntry extends BaseEntry {
-  type: "OccupationalHealthcare"
-  employerName: string
-  sickLeave?: SickLeave
-}
+export const NewOccupationalHealthcareEntrySchema = BaseNewEntrySchema.extend({
+  type: z.literal('OccupationalHealthcare'),
+  employerName: z.string(),
+  sickLeave: SickLeaveSchema.optional()
+});
 
-export type Entry =
-  | HospitalEntry
-  | OccupationalHealthcareEntry
-  | HealthCheckEntry;
+// creation of final schemas for NewEntry and Entry assisted with generative AI
+
+export const NewEntrySchema = z.discriminatedUnion('type', [
+  NewHospitalEntrySchema,
+  NewOccupationalHealthcareEntrySchema,
+  NewHealthCheckEntrySchema
+]);
+
+export const HospitalEntrySchema = NewHospitalEntrySchema.extend({
+  id: z.string()
+});
+
+export const OccupationalHealthcareEntrySchema = NewOccupationalHealthcareEntrySchema.extend({
+  id: z.string()
+});
+
+export const HealthCheckEntrySchema = NewHealthCheckEntrySchema.extend({
+  id: z.string()
+});
+
+export const EntrySchema = z.discriminatedUnion('type', [
+  HospitalEntrySchema,
+  OccupationalHealthcareEntrySchema,
+  HealthCheckEntrySchema
+]);
+
+export type NewEntry = z.infer<typeof NewEntrySchema>;
+export type Entry = z.infer<typeof EntrySchema>;
+
 
 export const NewPatientSchema = z.object({
   name: z.string(),
