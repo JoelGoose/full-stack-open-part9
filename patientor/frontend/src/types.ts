@@ -37,11 +37,6 @@ const HealthCheckRating = {
 
 type HealthCheckRating = typeof HealthCheckRating[keyof typeof HealthCheckRating];
 
-interface HealthCheckEntry extends BaseEntry {
-  type: "HealthCheck";
-  healthCheckRating: HealthCheckRating;
-}
-
 interface Discharge {
   date: string,
   criteria: string
@@ -50,6 +45,11 @@ interface Discharge {
 interface SickLeave {
   startDate: string,
   endDate: string
+}
+
+interface HealthCheckEntry extends BaseEntry {
+  type: "HealthCheck";
+  healthCheckRating: HealthCheckRating;
 }
 
 interface HospitalEntry extends BaseEntry {
